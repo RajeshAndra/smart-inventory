@@ -1,0 +1,8 @@
+streamlit
+pillow
+plotly
+pandas
+sqlite3
+google-generativeai
+tabulate
+ultralytics
