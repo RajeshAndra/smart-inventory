@@ -11,11 +11,19 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 DB_PATH = "inventory.db"
 
 def fix_window_function_sql(query: str) -> str:
-    # If window functions are used in WHERE, wrap into CTE
-    if "lag(" in query.lower() and "where" in query.lower():
-        core = re.sub(r"(?is)^select", "SELECT", query)
-        return f"WITH base AS ({core}) SELECT * FROM base;"
-    return query
+
+    q_lower = query.strip().lower()
+
+    if q_lower.startswith("with "):
+        return query.strip().rstrip(";")
+
+    if ("lag(" in q_lower or "lead(" in q_lower) and not q_lower.startswith("with "):
+        query_fixed = query.strip().rstrip(";")
+        return f"WITH base AS ({query_fixed}) SELECT * FROM base;"
+    
+    # Default: return unchanged
+    return query.strip().rstrip(";")
+
 
 def run_safe_sql(query: str) -> pd.DataFrame:
     """Safely execute read-only SQL queries (supports WITH, SELECT, window functions)."""
